@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinemafiles | Movie Tracker & Mike System Rankings</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['"Bebas Neue"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            cinemadark: '#0d1115',
+            letterboxd: '#14181c',
+            cardbg: '#181f26',
+            cardborder: '#273340',
+            amcred: '#e50914',
+            amcdarkred: '#b20710',
+            fandangorange: '#ff6600',
+            fandangodark: '#cc5200',
+            goodgreen: '#00e054',
+            alrightamber: '#ffaa00',
+            mehred: '#ff4d4d',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Ticket Stub Scalloped Notches & Perforation */
+    .ticket-stub {
+      position: relative;
+      background: #181f26;
+      border: 1px solid #283542;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ticket-stub:hover {
+      border-color: #ff6600;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 102, 0, 0.15);
+    }
+    .ticket-notch-top {
+      position: absolute;
+      top: -10px;
+      right: 120px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #0d1115;
+      border-bottom: 1px solid #283542;
+      z-index: 10;
+    }
+    .ticket-notch-bottom {
+      position: absolute;
+      bottom: -10px;
+      right: 120px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #0d1115;
+      border-top: 1px solid #283542;
+      z-index: 10;
+    }
+    .perforated-line {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      right: 129px;
+      width: 2px;
+      border-left: 2px dashed #2c3a4a;
+      z-index: 5;
+    }
+    @media (max-width: 640px) {
+      .ticket-notch-top, .ticket-notch-bottom, .perforated-line {
+        display: none;
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #14181c;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2a3746;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ff6600;
+    }
+    .drawer-overlay {
+      transition: opacity 0.25s ease-in-out;
+    }
+    .drawer-content {
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  </style>
+</head>
+<body class="bg-cinemadark text-slate-100 min-h-screen font-sans antialiased selection:bg-fandangorange selection:text-white pb-20">
+
+  <!-- TOP NAV & HYBRID BRANDING -->
+  <header class="border-b border-cardborder bg-letterboxd/95 backdrop-blur sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20 gap-4">
+        
+        <!-- Brand identity -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amcred via-fandangorange to-amber-500 flex items-center justify-center shadow-lg shadow-amcred/25 border border-white/20">
+            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 8 6 4-6 4Z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-display tracking-wider text-2xl sm:text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-amber-200 bg-clip-text text-transparent">CINEMAFILES</span>
+              <span class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest bg-amcred text-white rounded font-mono shadow-sm">AMC · FANDANGO · LB</span>
+            </div>
+            <p class="text-xs text-slate-400 font-mono flex items-center gap-1.5">
+              <span>AG · HARRY · HOLDEN · MIKE</span>
+              <span class="text-fandangorange font-bold">★ THE MIKE SYSTEM</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <button id="addMovieBtn" class="px-3.5 py-2 bg-gradient-to-r from-amcred to-fandangorange hover:from-red-600 hover:to-orange-600 text-white font-semibold text-xs sm:text-sm rounded-lg flex items-center gap-1.5 shadow-md shadow-fandangorange/20 transition active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            <span class="hidden sm:inline">Add Movie</span>
+            <span class="sm:hidden">Add</span>
+          </button>
+          
+          <button id="exportBtn" title="Export or Backup JSON" class="p-2 sm:px-3 sm:py-2 bg-cardbg hover:bg-slate-800 text-slate-300 border border-cardborder rounded-lg text-xs font-mono transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            <span class="hidden md:inline">Export / Backup</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- OVERVIEW HERO CARD -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+    <div class="bg-cardbg border border-cardborder rounded-xl p-4 sm:p-5 shadow-xl">
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 items-center">
+        
+        <!-- Total Watched -->
+        <div class="border-r border-cardborder/60 pr-2">
+          <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Watched Films</span>
+          <div class="flex items-baseline gap-2 mt-0.5">
+            <span id="statTotal" class="text-2xl sm:text-3xl font-display font-bold text-white">45</span>
+            <span class="text-xs text-slate-400 font-mono">movies</span>
+          </div>
+        </div>
+
+        <!-- Rated Progress -->
+        <div class="border-r border-cardborder/60 pr-2">
+          <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Rated Rate</span>
+          <div class="flex items-baseline gap-2 mt-0.5">
+            <span id="statRated" class="text-2xl sm:text-3xl font-display font-bold text-fandangorange">0</span>
+            <span id="statRatedPct" class="text-xs text-slate-400 font-mono">0%</span>
+          </div>
+        </div>
+
+        <!-- Mike System Breakdown -->
+        <div class="col-span-2 border-r border-cardborder/60 pr-4">
+          <div class="flex justify-between items-center text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1.5">
+            <span>Mike System Tiers</span>
+            <span class="text-slate-500 text-[10px]">Group Consensus</span>
+          </div>
+          <div class="h-3 w-full bg-slate-900 rounded-full overflow-hidden flex gap-0.5 p-0.5 border border-cardborder">
+            <div id="barGood" class="bg-goodgreen h-full rounded-sm transition-all" style="width: 33%" title="It was good"></div>
+            <div id="barAlright" class="bg-alrightamber h-full rounded-sm transition-all" style="width: 33%" title="It was alright"></div>
+            <div id="barMeh" class="bg-mehred h-full rounded-sm transition-all" style="width: 34%" title="Meh"></div>
+          </div>
+          <div class="flex justify-between text-[11px] font-mono mt-1 text-slate-400">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-goodgreen"></span> Good (<b id="cntGood" class="text-slate-200">0</b>)</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-alrightamber"></span> Alright (<b id="cntAlright" class="text-slate-200">0</b>)</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-mehred"></span> Meh (<b id="cntMeh" class="text-slate-200">0</b>)</span>
+          </div>
+        </div>
+
+        <!-- Attendance Scoreboard -->
+        <div class="col-span-2">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Squad Attendance</span>
+            <span class="text-[10px] font-mono text-slate-500">Tap avatar to toggle</span>
+          </div>
+          <div class="grid grid-cols-4 gap-2 text-center font-mono">
+            <div class="bg-slate-900/70 p-1.5 rounded border border-cardborder/50">
+              <div class="text-[10px] text-slate-400 font-bold">AG</div>
+              <div id="attAG" class="text-xs font-bold text-emerald-400 mt-0.5">100%</div>
+            </div>
+            <div class="bg-slate-900/70 p-1.5 rounded border border-cardborder/50">
+              <div class="text-[10px] text-slate-400 font-bold">HARRY</div>
+              <div id="attHarry" class="text-xs font-bold text-emerald-400 mt-0.5">100%</div>
+            </div>
+            <div class="bg-slate-900/70 p-1.5 rounded border border-cardborder/50">
+              <div class="text-[10px] text-slate-400 font-bold">HOLDEN</div>
+              <div id="attHolden" class="text-xs font-bold text-emerald-400 mt-0.5">100%</div>
+            </div>
+            <div class="bg-slate-900/70 p-1.5 rounded border border-cardborder/50">
+              <div class="text-[10px] text-slate-400 font-bold">MIKE</div>
+              <div id="attMike" class="text-xs font-bold text-emerald-400 mt-0.5">100%</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FILTER & SORT CONTROLS -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+    <div class="bg-letterboxd border border-cardborder rounded-xl p-4 space-y-4">
+      
+      <!-- Top Row: Search + Quick Stats -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        
+        <!-- Search Input -->
+        <div class="relative flex-1 max-w-md">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <input type="text" id="searchInput" placeholder="Search movies, venues, notes..." class="w-full bg-slate-900/80 border border-cardborder rounded-lg pl-10 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-fandangorange focus:ring-1 focus:ring-fandangorange transition font-sans">
+        </div>
+
+        <!-- Quick Info Tip -->
+        <div class="text-xs font-mono text-slate-400 flex items-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-fandangorange animate-pulse"></span>
+          <span>Click any friend avatar to quickly toggle Skipped / Attended</span>
+        </div>
+
+      </div>
+
+      <!-- Bottom Row: Mike System Tier, Friend Attendance Filter, Sort dropdown -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-cardborder/60">
+        
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Rating Tier Filter -->
+          <div class="flex items-center gap-1.5 text-xs font-mono">
+            <span class="text-slate-400">Rating:</span>
+            <select id="tierFilter" class="bg-slate-900 border border-cardborder text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-fandangorange">
+              <option value="ALL">All Movies</option>
+              <option value="It was good">★ It was good</option>
+              <option value="It was alright">★ It was alright</option>
+              <option value="Meh">★ Meh</option>
+              <option value="Unrated">Unrated</option>
+            </select>
+          </div>
+
+          <!-- Squad Attendance Filter -->
+          <div class="flex items-center gap-1.5 text-xs font-mono">
+            <span class="text-slate-400">Attendance:</span>
+            <select id="friendFilter" class="bg-slate-900 border border-cardborder text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-fandangorange">
+              <option value="ALL">Entire Squad (All)</option>
+              <option value="FULL_SQUAD">Full Crew Attended</option>
+              <option value="AG_SKIPPED">AG Skipped</option>
+              <option value="HARRY_SKIPPED">Harry Skipped</option>
+              <option value="HOLDEN_SKIPPED">Holden Skipped</option>
+              <option value="MIKE_SKIPPED">Mike Skipped</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Sort Option & View Toggle -->
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1.5 text-xs font-mono">
+            <span class="text-slate-400">Sort By:</span>
+            <select id="sortSelect" class="bg-slate-900 border border-cardborder text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-fandangorange">
+              <option value="CUSTOM">Custom Rank (#1 → #45)</option>
+              <option value="RATING_DESC">Mike Score: High to Low</option>
+              <option value="RATING_ASC">Mike Score: Low to High</option>
+              <option value="TITLE_ASC">Title: A to Z</option>
+              <option value="TITLE_DESC">Title: Z to A</option>
+              <option value="ATTENDANCE_DESC">Most Friends Attended</option>
+            </select>
+          </div>
+
+          <button id="resetFiltersBtn" class="text-xs text-slate-400 hover:text-fandangorange underline font-mono px-2 py-1">Reset</button>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MOVIES CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-baseline gap-2">
+        <h2 class="font-display tracking-wider text-xl sm:text-2xl text-slate-200">MOVIE TICKET STUBS</h2>
+        <span id="filteredCountLabel" class="text-xs font-mono text-slate-400">Showing 45 tickets</span>
+      </div>
+      <div class="text-xs font-mono text-slate-400 hidden sm:block">
+        Click ticket to log scores · Click friend chips to toggle attendance
+      </div>
+    </div>
+
+    <!-- Ticket Grid -->
+    <div id="movieGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Generated via JS -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-16 bg-cardbg border border-cardborder rounded-xl">
+      <div class="text-4xl mb-2">🎟️</div>
+      <h3 class="text-lg font-bold text-slate-200">No movies match your filters</h3>
+      <p class="text-xs text-slate-400 mt-1">Try resetting your filters or search keywords.</p>
+      <button id="emptyResetBtn" class="mt-4 px-4 py-2 bg-fandangorange hover:bg-fandangodark text-white rounded-lg text-xs font-semibold">Clear Filters</button>
+    </div>
+  </main>
+
+  <!-- SLIDE-OUT DETAIL DRAWER (CLICK-IN INSPECTOR) -->
+  <div id="drawerOverlay" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 opacity-0 pointer-events-none drawer-overlay flex justify-end">
+    <div id="drawerContent" class="w-full max-w-lg bg-letterboxd border-l border-cardborder h-full shadow-2xl flex flex-col translate-x-full drawer-content overflow-y-auto">
+      
+      <!-- Drawer Header -->
+      <div class="p-5 border-b border-cardborder bg-cardbg sticky top-0 z-10 flex items-start justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded bg-goodgreen/20 text-goodgreen border border-goodgreen/30">WATCHED</span>
+            <span id="drawerRank" class="text-xs font-mono text-slate-400 font-bold">RANK #1</span>
+          </div>
+          <h2 id="drawerTitle" class="text-2xl font-bold font-display tracking-wide text-white mt-1">Oppenheimer</h2>
+          <div class="flex items-center gap-2 text-xs font-mono text-slate-400 mt-0.5">
+            <span class="text-fandangorange">📍</span>
+            <span id="drawerTheater">Alamo Drafthouse</span>
+          </div>
+        </div>
+
+        <button id="closeDrawerBtn" class="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-900 border border-cardborder hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Drawer Body -->
+      <div class="p-5 space-y-6 flex-1">
+        
+        <!-- Aggregate Mike System Card -->
+        <div class="bg-cardbg border border-cardborder rounded-xl p-4 text-center relative overflow-hidden">
+          <div class="absolute -right-8 -bottom-8 w-28 h-28 bg-gradient-to-br from-fandangorange/10 to-amcred/10 rounded-full blur-xl pointer-events-none"></div>
+          <div class="text-[11px] font-mono tracking-widest text-slate-400 uppercase">Consensus Mike System Score</div>
+          <div id="drawerAggregateRating" class="my-2 inline-block px-4 py-1.5 rounded-full text-base font-bold font-mono tracking-wider border shadow-lg bg-slate-800 text-slate-400 border-slate-700">
+            UNRATED
+          </div>
+          <div id="drawerAggregateSub" class="text-xs font-mono text-slate-400">
+            Log friend scores below to calculate consensus
+          </div>
+        </div>
+
+        <!-- Individual Breakdown & Score Logging -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <span>FRIEND LOGS & SCORES</span>
+              <span class="text-[10px] text-fandangorange font-normal">(Mark skip or set score)</span>
+            </h3>
+            <span class="text-[10px] font-mono text-slate-500">Auto-calculates aggregate</span>
+          </div>
+
+          <div class="space-y-3" id="friendScoreRows">
+            <!-- Friend rows populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Quick Rank Shift -->
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-cardborder">
+          <label class="text-xs font-mono uppercase text-slate-400 block mb-2 font-bold">Custom Ranking Order</label>
+          <div class="flex items-center gap-2">
+            <button id="moveTopBtn" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono rounded border border-cardborder transition">▲ Move to Top</button>
+            <button id="moveUpBtn" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono rounded border border-cardborder transition">↑ Up 1</button>
+            <button id="moveDownBtn" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono rounded border border-cardborder transition">↓ Down 1</button>
+            <button id="moveBottomBtn" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono rounded border border-cardborder transition">▼ Bottom</button>
+          </div>
+        </div>
+
+        <!-- Edit Theater & Notes -->
+        <div class="space-y-4 pt-2 border-t border-cardborder/60">
+          <div>
+            <label class="text-xs font-mono text-slate-400 block mb-1">Theater Venue</label>
+            <input type="text" id="editTheaterInput" class="w-full bg-slate-900 border border-cardborder rounded-lg px-3 py-2 text-xs font-sans text-slate-200 focus:outline-none focus:border-fandangorange">
+          </div>
+
+          <div>
+            <label class="text-xs font-mono text-slate-400 block mb-1">Movie Notes</label>
+            <textarea id="editNotesInput" rows="2" placeholder="e.g. IMAX 70mm, Alamo downtown, 3D, etc." class="w-full bg-slate-900 border border-cardborder rounded-lg px-3 py-2 text-xs font-sans text-slate-200 focus:outline-none focus:border-fandangorange"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="p-4 bg-cardbg border-t border-cardborder flex items-center justify-between sticky bottom-0">
+        <button id="deleteMovieBtn" class="text-xs text-rose-400 hover:text-rose-300 font-mono transition flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          Delete
+        </button>
+        <button id="saveDrawerBtn" class="px-5 py-2 bg-gradient-to-r from-amcred to-fandangorange hover:from-red-600 hover:to-orange-600 text-white text-xs font-bold rounded-lg shadow-md transition">
+          Done / Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ADD MOVIE MODAL -->
+  <div id="addModalOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-letterboxd border border-cardborder rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-cardborder bg-cardbg flex items-center justify-between">
+        <h3 class="font-display tracking-wider text-xl text-white">ADD WATCHED MOVIE TO CINEMAFILES</h3>
+        <button id="closeAddModalBtn" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+      <div class="p-5 space-y-4">
+        <div>
+          <label class="text-xs font-mono text-slate-400 block mb-1">Movie Title *</label>
+          <input type="text" id="addTitleInput" placeholder="e.g. Dune: Part Two" class="w-full bg-slate-900 border border-cardborder rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-fandangorange">
+        </div>
+        <div>
+          <label class="text-xs font-mono text-slate-400 block mb-1">Theater Venue</label>
+          <input type="text" id="addTheaterInput" value="Alamo Drafthouse" class="w-full bg-slate-900 border border-cardborder rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-fandangorange">
+        </div>
+        <div>
+          <label class="text-xs font-mono text-slate-400 block mb-1">Initial Notes</label>
+          <input type="text" id="addNotesInput" placeholder="e.g. IMAX 70mm, 35mm screening, etc." class="w-full bg-slate-900 border border-cardborder rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-fandangorange">
+        </div>
+      </div>
+      <div class="p-4 bg-cardbg border-t border-cardborder flex justify-end gap-2">
+        <button id="cancelAddModalBtn" class="px-4 py-2 text-xs font-mono text-slate-400 hover:text-white">Cancel</button>
+        <button id="confirmAddModalBtn" class="px-5 py-2 bg-gradient-to-r from-amcred to-fandangorange text-white text-xs font-bold rounded-lg shadow">Add Film</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT / BACKUP MODAL -->
+  <div id="exportModalOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-letterboxd border border-cardborder rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-cardborder bg-cardbg flex items-center justify-between">
+        <h3 class="font-display tracking-wider text-xl text-white">BACKUP & SHARE CINEMAFILES DATA</h3>
+        <button id="closeExportModalBtn" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+      <div class="p-5 space-y-4">
+        <p class="text-xs text-slate-400">Copy this JSON snapshot to share rankings with AG, Harry, and Holden, or save your progress.</p>
+        <textarea id="exportJsonArea" readonly rows="8" class="w-full bg-slate-900 border border-cardborder rounded-lg p-3 text-xs font-mono text-emerald-400 focus:outline-none"></textarea>
+      </div>
+      <div class="p-4 bg-cardbg border-t border-cardborder flex items-center justify-between">
+        <button id="resetDefaultsBtn" class="text-xs font-mono text-rose-400 hover:text-rose-300">Reset to Defaults</button>
+        <div class="flex gap-2">
+          <button id="copyJsonBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-mono rounded-lg border border-cardborder">Copy to Clipboard</button>
+          <button id="closeExportDoneBtn" class="px-4 py-2 bg-fandangorange hover:bg-fandangodark text-white text-xs font-mono rounded-lg">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // Initial dataset of all 45 movies (watched, uncancelled, clear skip notes, all friends toggleable)
+    const INITIAL_MOVIES = [
+  {
+    "id": 1,
+    "title": "Oppenheimer",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 2,
+    "title": "Killers of the Flower Moon",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 3,
+    "title": "The Nun",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 4,
+    "title": "The Exorcist",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 5,
+    "title": "Saltburn",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 6,
+    "title": "Iron Claw",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 7,
+    "title": "Dune: Part Two",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 8,
+    "title": "Civil War",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 9,
+    "title": "Furiosa: A Mad Max Saga",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 10,
+    "title": "Alien: Romulus",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 11,
+    "title": "Final Destination Bloodlines",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 12,
+    "title": "Friendship",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 13,
+    "title": "Gladiator II",
+    "theater": "AMC 34th Imax",
+    "notes": "AMC 34th Imax",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 14,
+    "title": "28 Years Later",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 15,
+    "title": "The Phoenician Scheme",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 16,
+    "title": "The Life of Chuck",
+    "theater": "Alamo Drafthouse",
+    "notes": "L",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 17,
+    "title": "The Boy and the Heron",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 18,
+    "title": "How to Train Your Dragon",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 19,
+    "title": "Lord of the Rings: War of the Rohirrim",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 20,
+    "title": "F1 the Movie",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 21,
+    "title": "Fantastic Four: First Steps",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 22,
+    "title": "The Naked Gun",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 23,
+    "title": "The Monkey",
+    "theater": "AMC 14th St",
+    "notes": "AMC 14th St",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 24,
+    "title": "Star Wars: Revenge of the Sith",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 25,
+    "title": "Weapons",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 26,
+    "title": "Toxic Avenger",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 27,
+    "title": "The Long Walk",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 28,
+    "title": "One Battle After Another",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 29,
+    "title": "Smashing Machine",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 30,
+    "title": "Superman",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 31,
+    "title": "Mickey 17",
+    "theater": "iPic theatre",
+    "notes": "iPic theatre",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 32,
+    "title": "Frankenstein",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 33,
+    "title": "Predator: Badlands",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 34,
+    "title": "Deadpool and Wolverine",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 35,
+    "title": "The Lord of the Rings: Fellowship of the Ring",
+    "theater": "Newport Mall",
+    "notes": "Newport Mall",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 36,
+    "title": "28 Years Later: Bone Temple",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 37,
+    "title": "Project Hail Mary",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 38,
+    "title": "Hokum",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 39,
+    "title": "Supergirl",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 40,
+    "title": "Coyote vs. Acme",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 41,
+    "title": "Resident Evil",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 42,
+    "title": "Primetime",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 43,
+    "title": "Warfare",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 44,
+    "title": "The Odyssey",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  },
+  {
+    "id": 45,
+    "title": "Clayface",
+    "theater": "Alamo Drafthouse",
+    "notes": "",
+    "attendance": {
+      "AG": true,
+      "Harry": true,
+      "Holden": true,
+      "Mike": true
+    },
+    "ratings": {
+      "AG": null,
+      "Harry": null,
+      "Holden": null,
+      "Mike": null
+    }
+  }
+];
+
+    const FRIENDS = ["AG", "Harry", "Holden", "Mike"];
+    const MIKE_TIERS = ["It was good", "It was alright", "Meh"];
+
+    let movies = [];
+    let activeMovieId = null;
+    let currentFilterTier = "ALL";
+    let currentFilterFriend = "ALL";
+    let currentSearchQuery = "";
+    let currentSort = "CUSTOM";
+
+    // Safe LocalStorage wrapper
+    function loadState() {
+      try {
+        const saved = localStorage.getItem("cinemafiles_movies_v5");
+        if (saved) {
+          movies = JSON.parse(saved);
+          return;
+        }
+      } catch (e) {
+        console.warn("LocalStorage access failed:", e);
+      }
+      movies = JSON.parse(JSON.stringify(INITIAL_MOVIES));
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem("cinemafiles_movies_v5", JSON.stringify(movies));
+      } catch (e) {
+        console.warn("LocalStorage save failed:", e);
+      }
+      updateStats();
+    }
+
+    // Mike System Aggregate Calculation
+    // It was good = 3 pts, It was alright = 2 pts, Meh = 1 pt
+    function computeAggregate(movie) {
+      let sum = 0;
+      let count = 0;
+      let attendedCount = 0;
+
+      FRIENDS.forEach(f => {
+        if (movie.attendance && movie.attendance[f]) {
+          attendedCount++;
+          const rating = movie.ratings ? movie.ratings[f] : null;
+          if (rating === "It was good") { sum += 3; count++; }
+          else if (rating === "It was alright") { sum += 2; count++; }
+          else if (rating === "Meh") { sum += 1; count++; }
+        }
+      });
+
+      if (count === 0) {
+        return { 
+          tier: "Unrated", 
+          score: 0, 
+          text: "Unrated", 
+          ratedCount: 0, 
+          attendedCount 
+        };
+      }
+
+      const avg = sum / count;
+      let tier = "Meh";
+      if (avg >= 2.34) tier = "It was good";
+      else if (avg >= 1.67) tier = "It was alright";
+
+      return { tier, score: avg, text: tier, ratedCount: count, attendedCount };
+    }
+
+    // Render Stats Bar
+    function updateStats() {
+      const total = movies.length;
+
+      let ratedMoviesCount = 0;
+      let goodCnt = 0, alrightCnt = 0, mehCnt = 0;
+
+      movies.forEach(m => {
+        const agg = computeAggregate(m);
+        if (agg.ratedCount > 0) ratedMoviesCount++;
+        if (agg.tier === "It was good") goodCnt++;
+        else if (agg.tier === "It was alright") alrightCnt++;
+        else if (agg.tier === "Meh") mehCnt++;
+      });
+
+      document.getElementById("statTotal").textContent = total;
+      document.getElementById("statRated").textContent = ratedMoviesCount;
+      document.getElementById("statRatedPct").textContent = total > 0 ? Math.round((ratedMoviesCount / total) * 100) + "%" : "0%";
+
+      document.getElementById("cntGood").textContent = goodCnt;
+      document.getElementById("cntAlright").textContent = alrightCnt;
+      document.getElementById("cntMeh").textContent = mehCnt;
+
+      const ratedTotal = goodCnt + alrightCnt + mehCnt;
+      if (ratedTotal > 0) {
+        document.getElementById("barGood").style.width = (goodCnt / ratedTotal * 100) + "%";
+        document.getElementById("barAlright").style.width = (alrightCnt / ratedTotal * 100) + "%";
+        document.getElementById("barMeh").style.width = (mehCnt / ratedTotal * 100) + "%";
+      } else {
+        document.getElementById("barGood").style.width = "33%";
+        document.getElementById("barAlright").style.width = "33%";
+        document.getElementById("barMeh").style.width = "34%";
+      }
+
+      // Attendance calculations across all movies
+      FRIENDS.forEach(f => {
+        const attended = movies.filter(m => m.attendance && m.attendance[f]).length;
+        const pct = total > 0 ? Math.round((attended / total) * 100) + "%" : "100%";
+        const el = document.getElementById("att" + f);
+        if (el) {
+          el.textContent = pct;
+          el.className = attended === total ? "text-xs font-bold text-emerald-400 mt-0.5" : "text-xs font-bold text-amber-400 mt-0.5";
+        }
+      });
+    }
+
+    // Filter & Sort Movies
+    function getFilteredAndSortedMovies() {
+      return movies.filter(movie => {
+        // Mike Tier filter
+        if (currentFilterTier !== "ALL") {
+          const agg = computeAggregate(movie);
+          if (agg.tier !== currentFilterTier) return false;
+        }
+
+        // Friend attendance filter
+        if (currentFilterFriend === "FULL_SQUAD") {
+          if (!movie.attendance || !FRIENDS.every(f => movie.attendance[f])) return false;
+        } else if (currentFilterFriend === "AG_SKIPPED") {
+          if (!movie.attendance || movie.attendance["AG"] !== false) return false;
+        } else if (currentFilterFriend === "HARRY_SKIPPED") {
+          if (!movie.attendance || movie.attendance["Harry"] !== false) return false;
+        } else if (currentFilterFriend === "HOLDEN_SKIPPED") {
+          if (!movie.attendance || movie.attendance["Holden"] !== false) return false;
+        } else if (currentFilterFriend === "MIKE_SKIPPED") {
+          if (!movie.attendance || movie.attendance["Mike"] !== false) return false;
+        }
+
+        // Search text
+        if (currentSearchQuery.trim() !== "") {
+          const q = currentSearchQuery.toLowerCase();
+          const matchTitle = movie.title.toLowerCase().includes(q);
+          const matchTheater = (movie.theater || "").toLowerCase().includes(q);
+          const matchNotes = (movie.notes || "").toLowerCase().includes(q);
+          if (!matchTitle && !matchTheater && !matchNotes) return false;
+        }
+
+        return true;
+      }).sort((a, b) => {
+        if (currentSort === "RATING_DESC") {
+          return computeAggregate(b).score - computeAggregate(a).score;
+        } else if (currentSort === "RATING_ASC") {
+          return computeAggregate(a).score - computeAggregate(b).score;
+        } else if (currentSort === "TITLE_ASC") {
+          return a.title.localeCompare(b.title);
+        } else if (currentSort === "TITLE_DESC") {
+          return b.title.localeCompare(a.title);
+        } else if (currentSort === "ATTENDANCE_DESC") {
+          const aCount = Object.values(a.attendance || {}).filter(Boolean).length;
+          const bCount = Object.values(b.attendance || {}).filter(Boolean).length;
+          return bCount - aCount;
+        }
+        // Default: Original/Custom Rank
+        return movies.indexOf(a) - movies.indexOf(b);
+      });
+    }
+
+    // Toggle attendance directly for a friend on a movie
+    function toggleFriendAttendance(movieId, friend, event) {
+      if (event) event.stopPropagation();
+      const movie = movies.find(m => m.id === movieId);
+      if (!movie) return;
+      if (!movie.attendance) movie.attendance = {};
+      movie.attendance[friend] = !movie.attendance[friend];
+      if (!movie.attendance[friend]) {
+        if (movie.ratings) movie.ratings[friend] = null;
+      }
+      saveState();
+      renderGrid();
+      if (activeMovieId === movieId) {
+        openDrawer(movieId);
+      }
+    }
+
+    // Render Movie Grid
+    function renderGrid() {
+      const container = document.getElementById("movieGrid");
+      const emptyState = document.getElementById("emptyState");
+      const list = getFilteredAndSortedMovies();
+
+      document.getElementById("filteredCountLabel").textContent = "Showing " + list.length + " of " + movies.length + " tickets";
+
+      if (list.length === 0) {
+        container.innerHTML = "";
+        emptyState.classList.remove("hidden");
+        return;
+      }
+      emptyState.classList.add("hidden");
+
+      let html = "";
+      list.forEach((movie) => {
+        const globalRank = movies.indexOf(movie) + 1;
+        const agg = computeAggregate(movie);
+
+        // Rating pill style
+        let badgeClass = "bg-slate-800 text-slate-400 border-slate-700";
+        if (agg.tier === "It was good") {
+          badgeClass = "bg-goodgreen/15 text-goodgreen border-goodgreen/40 shadow-sm shadow-goodgreen/20";
+        } else if (agg.tier === "It was alright") {
+          badgeClass = "bg-alrightamber/15 text-alrightamber border-alrightamber/40 shadow-sm shadow-alrightamber/20";
+        } else if (agg.tier === "Meh") {
+          badgeClass = "bg-mehred/15 text-mehred border-mehred/40 shadow-sm shadow-mehred/20";
+        }
+
+        // Interactive attendance chips right on the card
+        const attendanceHtml = FRIENDS.map(f => {
+          const went = movie.attendance && movie.attendance[f];
+          if (went) {
+            return `
+              <button class="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-emerald-300 border border-emerald-500/40 hover:bg-rose-950/40 hover:text-rose-300 transition" 
+                      title="${f}: Attended (Click to mark skipped)" 
+                      onclick="window.cardToggleAttendance(${movie.id}, '${f}', event)">
+                ✓ ${f}
+              </button>
+            `;
+          } else {
+            return `
+              <button class="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-950/40 text-rose-400/90 border border-rose-900/60 line-through hover:bg-slate-800 hover:text-emerald-300 transition" 
+                      title="${f}: Skipped (Click to mark attended)" 
+                      onclick="window.cardToggleAttendance(${movie.id}, '${f}', event)">
+                ✕ ${f}
+              </button>
+            `;
+          }
+        }).join("");
+
+        // Format Theater subtext
+        const theaterDisplay = movie.theater ? movie.theater : "Alamo Drafthouse";
+
+        html += `
+          <div class="ticket-stub group cursor-pointer" data-id="${movie.id}">
+            
+            <!-- Notches & Perforation for Fandango ticket look -->
+            <div class="ticket-notch-top"></div>
+            <div class="ticket-notch-bottom"></div>
+            <div class="perforated-line"></div>
+
+            <div class="flex flex-col sm:flex-row justify-between h-full min-h-[145px]">
+              
+              <!-- Left Stub: Movie Details (Letterboxd/AMC style) -->
+              <div class="p-4 sm:pr-6 flex-1 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span class="text-[10px] font-mono text-slate-500 font-bold bg-slate-900/80 px-1.5 py-0.5 rounded border border-cardborder">
+                      #${globalRank}
+                    </span>
+                    ${movie.notes ? `<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-fandangorange border border-slate-700/60 truncate max-w-[150px]">${movie.notes}</span>` : ''}
+                  </div>
+
+                  <h3 class="font-bold text-base sm:text-lg text-white group-hover:text-fandangorange transition line-clamp-1">
+                    ${movie.title}
+                  </h3>
+
+                  <div class="text-xs text-slate-400 font-mono mt-0.5 flex items-center gap-1">
+                    <span class="text-amcred">📍</span>
+                    <span>${theaterDisplay}</span>
+                  </div>
+                </div>
+
+                <!-- Squad Attendance Chips (Clickable) -->
+                <div class="mt-3 pt-2.5 border-t border-cardborder/60 flex items-center justify-between">
+                  <div class="flex items-center gap-1 flex-wrap">
+                    ${attendanceHtml}
+                  </div>
+                  <span class="text-[10px] font-mono text-slate-500 group-hover:text-slate-300 transition pl-1">Scores →</span>
+                </div>
+              </div>
+
+              <!-- Right Tear-off Stub: Mike System Aggregate Rating (Fandango Style) -->
+              <div class="w-full sm:w-[120px] bg-slate-900/80 p-3 sm:py-4 flex flex-row sm:flex-col items-center justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-cardborder text-center">
+                <div class="text-[9px] font-mono text-slate-400 uppercase tracking-widest hidden sm:block">MIKE RATING</div>
+                
+                <div class="my-auto">
+                  <div class="px-2 py-1 rounded text-xs font-mono font-bold border ${badgeClass}">
+                    ${agg.text}
+                  </div>
+                  ${agg.score > 0 ? `<div class="text-[10px] font-mono text-slate-400 mt-1 hidden sm:block">${agg.score.toFixed(1)} / 3.0</div>` : ''}
+                </div>
+
+                <div class="text-[8px] font-mono text-slate-500 tracking-tighter uppercase">
+                  PASS #${movie.id.toString().padStart(4, '0')}
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+
+      // Attach click listeners to ticket cards
+      container.querySelectorAll(".ticket-stub").forEach(card => {
+        card.addEventListener("click", () => {
+          const id = parseInt(card.getAttribute("data-id"));
+          openDrawer(id);
+        });
+      });
+    }
+
+    window.cardToggleAttendance = toggleFriendAttendance;
+
+    // Open Drawer for Movie
+    function openDrawer(id) {
+      activeMovieId = id;
+      const movie = movies.find(m => m.id === id);
+      if (!movie) return;
+
+      const globalRank = movies.indexOf(movie) + 1;
+      const agg = computeAggregate(movie);
+
+      document.getElementById("drawerTitle").textContent = movie.title;
+      document.getElementById("drawerRank").textContent = "RANK #" + globalRank;
+      document.getElementById("drawerTheater").textContent = movie.theater || "Alamo Drafthouse";
+
+      // Aggregate badge
+      const aggBadge = document.getElementById("drawerAggregateRating");
+      aggBadge.textContent = "★ " + agg.text.toUpperCase();
+      aggBadge.className = "my-2 inline-block px-4 py-1.5 rounded-full text-sm font-bold font-mono tracking-wider border shadow-lg ";
+      if (agg.tier === "It was good") {
+        aggBadge.className += "bg-goodgreen/20 text-goodgreen border-goodgreen/40 shadow-goodgreen/20";
+      } else if (agg.tier === "It was alright") {
+        aggBadge.className += "bg-alrightamber/20 text-alrightamber border-alrightamber/40 shadow-alrightamber/20";
+      } else if (agg.tier === "Meh") {
+        aggBadge.className += "bg-mehred/20 text-mehred border-mehred/40 shadow-mehred/20";
+      } else {
+        aggBadge.className += "bg-slate-800 text-slate-400 border-slate-700";
+      }
+
+      document.getElementById("drawerAggregateSub").textContent = agg.score > 0 
+        ? "Score: " + agg.score.toFixed(1) + " / 3.0 · " + agg.ratedCount + " rated (" + (4 - agg.attendedCount) + " skipped)"
+        : "No friend scores logged yet — tap Good, Alright, or Meh below";
+
+      // Edit fields
+      document.getElementById("editTheaterInput").value = movie.theater || "Alamo Drafthouse";
+      document.getElementById("editNotesInput").value = movie.notes || "";
+
+      // Populate Friend Score Rows
+      renderDrawerFriendRows(movie);
+
+      // Show drawer with animation
+      const overlay = document.getElementById("drawerOverlay");
+      const content = document.getElementById("drawerContent");
+      overlay.classList.remove("opacity-0", "pointer-events-none");
+      content.classList.remove("translate-x-full");
+    }
+
+    function renderDrawerFriendRows(movie) {
+      const container = document.getElementById("friendScoreRows");
+      let html = "";
+
+      FRIENDS.forEach(friend => {
+        const attended = movie.attendance ? !!movie.attendance[friend] : true;
+        const rating = movie.ratings ? movie.ratings[friend] : null;
+
+        html += `
+          <div class="bg-slate-900/80 border border-cardborder rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            
+            <!-- Friend Name & Attendance Toggle -->
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-xs font-mono font-bold text-slate-200">
+                ${friend.substring(0, 2)}
+              </span>
+              <div>
+                <span class="text-xs font-bold text-slate-200 font-mono">${friend}</span>
+                <div class="text-[10px] font-mono">
+                  ${attended ? '<span class="text-emerald-400 font-semibold">● Attended</span>' : '<span class="text-rose-400 font-semibold">✕ Marked as Skipped</span>'}
+                </div>
+              </div>
+            </div>
+
+            <!-- Attendance Toggle & Score Buttons -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <button class="toggle-attendance-btn px-2.5 py-1 rounded text-[10px] font-mono font-bold border transition ${attended ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-rose-950/60 text-rose-300 border-rose-800 hover:bg-rose-900/50'}" data-friend="${friend}">
+                ${attended ? 'Mark Skipped' : 'Mark Attended'}
+              </button>
+
+              <div class="flex items-center gap-1 ${!attended ? 'opacity-40 pointer-events-none' : ''}">
+                <button class="rate-btn px-2.5 py-1 rounded text-[10px] font-mono font-bold border transition ${rating === 'It was good' ? 'bg-goodgreen text-slate-950 border-goodgreen shadow' : 'bg-slate-800 text-slate-400 border-cardborder hover:text-white'}" data-friend="${friend}" data-val="It was good">
+                  Good
+                </button>
+                <button class="rate-btn px-2.5 py-1 rounded text-[10px] font-mono font-bold border transition ${rating === 'It was alright' ? 'bg-alrightamber text-slate-950 border-alrightamber shadow' : 'bg-slate-800 text-slate-400 border-cardborder hover:text-white'}" data-friend="${friend}" data-val="It was alright">
+                  Alright
+                </button>
+                <button class="rate-btn px-2.5 py-1 rounded text-[10px] font-mono font-bold border transition ${rating === 'Meh' ? 'bg-mehred text-white border-mehred shadow' : 'bg-slate-800 text-slate-400 border-cardborder hover:text-white'}" data-friend="${friend}" data-val="Meh">
+                  Meh
+                </button>
+                ${rating ? `
+                  <button class="clear-rate-btn text-[10px] text-slate-500 hover:text-slate-300 p-1" data-friend="${friend}" title="Clear rating">✕</button>
+                ` : ''}
+              </div>
+            </div>
+
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+
+      // Event handlers for attendance & ratings
+      container.querySelectorAll(".toggle-attendance-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const friend = btn.getAttribute("data-friend");
+          if (!movie.attendance) movie.attendance = {};
+          movie.attendance[friend] = !movie.attendance[friend];
+          if (!movie.attendance[friend]) {
+            if (movie.ratings) movie.ratings[friend] = null;
+          }
+          saveState();
+          openDrawer(activeMovieId);
+          renderGrid();
+        });
+      });
+
+      container.querySelectorAll(".rate-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const friend = btn.getAttribute("data-friend");
+          const val = btn.getAttribute("data-val");
+          if (!movie.ratings) movie.ratings = {};
+          movie.ratings[friend] = val;
+          saveState();
+          openDrawer(activeMovieId);
+          renderGrid();
+        });
+      });
+
+      container.querySelectorAll(".clear-rate-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const friend = btn.getAttribute("data-friend");
+          if (movie.ratings) movie.ratings[friend] = null;
+          saveState();
+          openDrawer(activeMovieId);
+          renderGrid();
+        });
+      });
+    }
+
+    function closeDrawer() {
+      const overlay = document.getElementById("drawerOverlay");
+      const content = document.getElementById("drawerContent");
+      overlay.classList.add("opacity-0", "pointer-events-none");
+      content.classList.add("translate-x-full");
+      activeMovieId = null;
+    }
+
+    // Rank Shifting
+    function moveMovie(direction) {
+      if (!activeMovieId) return;
+      const idx = movies.findIndex(m => m.id === activeMovieId);
+      if (idx === -1) return;
+
+      if (direction === "TOP" && idx > 0) {
+        const [item] = movies.splice(idx, 1);
+        movies.unshift(item);
+      } else if (direction === "UP" && idx > 0) {
+        const temp = movies[idx];
+        movies[idx] = movies[idx - 1];
+        movies[idx - 1] = temp;
+      } else if (direction === "DOWN" && idx < movies.length - 1) {
+        const temp = movies[idx];
+        movies[idx] = movies[idx + 1];
+        movies[idx + 1] = temp;
+      } else if (direction === "BOTTOM" && idx < movies.length - 1) {
+        const [item] = movies.splice(idx, 1);
+        movies.push(item);
+      }
+
+      saveState();
+      openDrawer(activeMovieId);
+      renderGrid();
+    }
+
+    // Initialize Event Listeners
+    function initListeners() {
+      // Drawer close
+      document.getElementById("closeDrawerBtn").addEventListener("click", closeDrawer);
+      document.getElementById("saveDrawerBtn").addEventListener("click", closeDrawer);
+      document.getElementById("drawerOverlay").addEventListener("click", (e) => {
+        if (e.target.id === "drawerOverlay") closeDrawer();
+      });
+
+      document.getElementById("editTheaterInput").addEventListener("input", (e) => {
+        if (!activeMovieId) return;
+        const movie = movies.find(m => m.id === activeMovieId);
+        if (movie) {
+          movie.theater = e.target.value;
+          saveState();
+          renderGrid();
+        }
+      });
+
+      document.getElementById("editNotesInput").addEventListener("input", (e) => {
+        if (!activeMovieId) return;
+        const movie = movies.find(m => m.id === activeMovieId);
+        if (movie) {
+          movie.notes = e.target.value;
+          saveState();
+          renderGrid();
+        }
+      });
+
+      // Drawer Rank moves
+      document.getElementById("moveTopBtn").addEventListener("click", () => moveMovie("TOP"));
+      document.getElementById("moveUpBtn").addEventListener("click", () => moveMovie("UP"));
+      document.getElementById("moveDownBtn").addEventListener("click", () => moveMovie("DOWN"));
+      document.getElementById("moveBottomBtn").addEventListener("click", () => moveMovie("BOTTOM"));
+
+      // Delete Movie
+      document.getElementById("deleteMovieBtn").addEventListener("click", () => {
+        if (!activeMovieId) return;
+        const idx = movies.findIndex(m => m.id === activeMovieId);
+        if (idx !== -1) {
+          movies.splice(idx, 1);
+          saveState();
+          closeDrawer();
+          renderGrid();
+        }
+      });
+
+      // Dropdown filters
+      document.getElementById("tierFilter").addEventListener("change", (e) => {
+        currentFilterTier = e.target.value;
+        renderGrid();
+      });
+
+      document.getElementById("friendFilter").addEventListener("change", (e) => {
+        currentFilterFriend = e.target.value;
+        renderGrid();
+      });
+
+      document.getElementById("sortSelect").addEventListener("change", (e) => {
+        currentSort = e.target.value;
+        renderGrid();
+      });
+
+      document.getElementById("searchInput").addEventListener("input", (e) => {
+        currentSearchQuery = e.target.value;
+        renderGrid();
+      });
+
+      // Reset filters
+      const resetFn = () => {
+        currentFilterTier = "ALL";
+        currentFilterFriend = "ALL";
+        currentSearchQuery = "";
+        currentSort = "CUSTOM";
+
+        document.getElementById("searchInput").value = "";
+        document.getElementById("tierFilter").value = "ALL";
+        document.getElementById("friendFilter").value = "ALL";
+        document.getElementById("sortSelect").value = "CUSTOM";
+
+        renderGrid();
+      };
+
+      document.getElementById("resetFiltersBtn").addEventListener("click", resetFn);
+      document.getElementById("emptyResetBtn").addEventListener("click", resetFn);
+
+      // Add Movie Modal
+      const addModal = document.getElementById("addModalOverlay");
+      document.getElementById("addMovieBtn").addEventListener("click", () => {
+        document.getElementById("addTitleInput").value = "";
+        document.getElementById("addTheaterInput").value = "Alamo Drafthouse";
+        document.getElementById("addNotesInput").value = "";
+        addModal.classList.remove("hidden");
+      });
+
+      const closeAddModal = () => addModal.classList.add("hidden");
+      document.getElementById("closeAddModalBtn").addEventListener("click", closeAddModal);
+      document.getElementById("cancelAddModalBtn").addEventListener("click", closeAddModal);
+
+      document.getElementById("confirmAddModalBtn").addEventListener("click", () => {
+        const title = document.getElementById("addTitleInput").value.trim();
+        if (!title) return;
+
+        const theater = document.getElementById("addTheaterInput").value.trim() || "Alamo Drafthouse";
+        const notes = document.getElementById("addNotesInput").value.trim();
+
+        const newId = movies.length > 0 ? Math.max(...movies.map(m => m.id)) + 1 : 1;
+        const newMovie = {
+          id: newId,
+          title: title,
+          theater: theater,
+          notes: notes,
+          attendance: { "AG": true, "Harry": true, "Holden": true, "Mike": true },
+          ratings: { "AG": null, "Harry": null, "Holden": null, "Mike": null }
+        };
+
+        movies.unshift(newMovie);
+        saveState();
+        closeAddModal();
+        renderGrid();
+        openDrawer(newId);
+      });
+
+      // Export / Backup Modal
+      const exportModal = document.getElementById("exportModalOverlay");
+      document.getElementById("exportBtn").addEventListener("click", () => {
+        document.getElementById("exportJsonArea").value = JSON.stringify(movies, null, 2);
+        exportModal.classList.remove("hidden");
+      });
+
+      const closeExportModal = () => exportModal.classList.add("hidden");
+      document.getElementById("closeExportModalBtn").addEventListener("click", closeExportModal);
+      document.getElementById("closeExportDoneBtn").addEventListener("click", closeExportModal);
+
+      document.getElementById("copyJsonBtn").addEventListener("click", () => {
+        const area = document.getElementById("exportJsonArea");
+        area.select();
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(area.value);
+          } else {
+            document.execCommand('copy');
+          }
+          document.getElementById("copyJsonBtn").textContent = "Copied!";
+          setTimeout(() => {
+            document.getElementById("copyJsonBtn").textContent = "Copy to Clipboard";
+          }, 2000);
+        } catch (err) {
+          document.execCommand('copy');
+        }
+      });
+
+      document.getElementById("resetDefaultsBtn").addEventListener("click", () => {
+        movies = JSON.parse(JSON.stringify(INITIAL_MOVIES));
+        saveState();
+        closeExportModal();
+        renderGrid();
+      });
+    }
+
+    // App Startup
+    window.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      updateStats();
+      renderGrid();
+      initListeners();
+    });
+  </script>
+</body>
+</html>
